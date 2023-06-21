@@ -9,7 +9,7 @@ BG_COLOR = (9, 161, 139)
 ALPHABET = "AĄBCĆDEĘFGHIJKLŁMNŃOÓPRSŚTUWYZŻŹ"
 
 
-def find_indexes(letter, text):
+def find_indexes(letter: str, text: str) -> list[int]:
     indexes = []
     for i in range(len(text)):
         if text[i] == letter:
@@ -34,21 +34,22 @@ class Game:
         pygame.display.set_icon(pygame.image.load("img/icon.png"))
 
         # Zeminne dot. bierzącej gry
-        self.current_step = 10
-        self.players = (player1, player2)
-        self.current_player = self.players[0]
+        self.current_step = 0
+        self.players = [player1, player2]
+        self.current_player = 0
         self.category = "Literaturoznawstwo"
         self.word = "Anastazja".upper()
         self.letters_remaining = len(self.word)
         self.guessed_word_list = ["_" for _ in range(self.letters_remaining)]
         self.guessed_word = self.get_guessed_word()
+        self.winner = None
 
         # Elementy na ekranie
         self.hangman_surface = self.images[0]
         self.hangman_rect = self.hangman_surface.get_rect(midleft=(0, 300))
 
-        self.current_player_surface = self.player_font.render(f"Tura gracza: {self.current_player.nickname}", True,
-                                                              "black")
+        self.current_player_surface = self.player_font.render(
+            f"Tura gracza: {self.players[self.current_player].nickname}", True, "black")
         self.current_player_rect = self.current_player_surface.get_rect(midtop=(1100, 10))
 
         self.category_surface = self.word_font.render(f"Kategoria: {self.category}", True, "black")
@@ -64,11 +65,12 @@ class Game:
         while self.is_running:
             self.check_input()
             self.draw_content()
+            self.check_finish()
             self.clock.tick(FPS)
 
         pygame.quit()
 
-    def check_input(self):
+    def check_input(self) -> None:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.is_running = False
@@ -76,7 +78,9 @@ class Game:
                 for button in self.buttons:
                     if button.collidepoint(event.pos):
                         button.is_visible = False
+
                         self.check_letter(button)
+                        self.change_player()
 
     def check_letter(self, button: Button) -> None:
         if button.letter in self.word:
@@ -85,11 +89,17 @@ class Game:
                 self.guessed_word_list[index] = button.letter
                 self.guessed_word = self.get_guessed_word()
                 self.letters_remaining -= 1
+        elif self.current_step <= 11:
+            self.current_step += 1
 
-    def draw_content(self):
+    # def check_finish(self):
+
+    def draw_content(self) -> None:
         self.screen.fill(BG_COLOR)
         self.hangman_surface = self.images[self.current_step]
         self.screen.blit(self.hangman_surface, self.hangman_rect)
+        self.current_player_surface = self.player_font.render(
+            f"Tura gracza: {self.players[self.current_player].nickname}", True, "black")
         self.screen.blit(self.current_player_surface, self.current_player_rect)
         self.screen.blit(self.category_surface, self.category_rect)
 
@@ -99,7 +109,7 @@ class Game:
             button.draw()
         pygame.display.update()
 
-    def load_buttons(self):
+    def load_buttons(self) -> None:
         horizontal_offset = 200
         vertical_offset = 100
         alphabet_letter_number = 0
@@ -116,9 +126,19 @@ class Game:
             result += " "
         return result
 
+    def check_finish(self) -> None:
+        if self.current_step == 10:
+            self.is_running = False
+            self.winner = self.players[self.current_player]
+            print(f"WINNER: {self.winner.nickname}")
+        elif self.letters_remaining <= 0:
+            self.change_player()
+            self.is_running = False
+            self.winner = self.players[self.current_player]
+            print(f"WINNER: {self.winner.nickname}")
 
-player1 = Player(1, "A")
-player2 = Player(2, "B")
-
-game = Game(player1, player2)
-game.run()
+    def change_player(self) -> None:
+        if self.current_player == 0:
+            self.current_player = 1
+        elif self.current_player == 1:
+            self.current_player = 0
