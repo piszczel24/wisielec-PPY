@@ -159,6 +159,7 @@ class RegisterPlayer(tk.Tk):
         session.add(Player(max_id + 1, nickname, hash_password(password)))
         session.commit()
         self.destroy()
+        messagebox.showinfo("Rejestracja", "Zarejestrowano pomyślnie!")
 
 
 elo = StartWindow()
