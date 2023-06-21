@@ -8,7 +8,6 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 import db_initialize
 from db_initialize import Player
 from game import Game
-from playerdto import PlayerDto
 
 SCREEN_WIDTH = 1960
 SCREEN_HEIGHT = 1080

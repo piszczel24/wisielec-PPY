@@ -20,7 +20,11 @@ class Player(Base):
         self.best_score = 0
 
     def add_win(self):
+        Session = sessionmaker(bind=engine)
+        session = Session()
         self.best_score += 1
+        session.merge(self)
+        session.commit()
 
 
 class Word(Base):

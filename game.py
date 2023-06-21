@@ -1,10 +1,9 @@
+import tkinter.messagebox as messagebox
 import pygame
 from sqlalchemy import create_engine, func
 from sqlalchemy.orm import sessionmaker, declarative_base
-import tkinter.messagebox as messagebox
 from button import Button
-from playerdto import PlayerDto
-from db_initialize import Player, Category, Word
+from db_initialize import Category, Word, Player
 
 WIDTH = 1600
 HEIGHT = 900
@@ -27,7 +26,7 @@ def find_indexes(letter: str, text: str) -> list[int]:
 
 
 class Game:
-    def __init__(self, player1: PlayerDto, player2: PlayerDto) -> None:
+    def __init__(self, player1: Player, player2: Player) -> None:
         pygame.init()
 
         # Zmienne globalne
@@ -56,7 +55,7 @@ class Game:
         self.letters_remaining = len(self.word_string)
         self.guessed_word_list = ["_" for _ in range(self.letters_remaining)]
         self.guessed_word = self.get_guessed_word()
-        self.winner = None
+        self.winner: Player = None
 
         # Elementy na ekranie
         self.hangman_surface = self.images[0]
@@ -144,11 +143,13 @@ class Game:
         if self.current_step == 10:
             self.is_running = False
             self.winner = self.players[self.current_player]
+            self.winner.add_win()
             messagebox.showinfo("Gratulacje", f"Wygrał gracz: {self.winner.nickname}")
         elif self.letters_remaining <= 0:
             self.change_player()
             self.is_running = False
             self.winner = self.players[self.current_player]
+            self.winner.add_win()
             messagebox.showinfo("Gratulacje", f"Wygrał gracz: {self.winner.nickname}")
 
     def change_player(self) -> None:
