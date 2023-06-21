@@ -8,7 +8,6 @@ class Button(pygame.Rect):
 
         self.letter = letter
         self.surface = surface
-
         self.is_visible = True
 
         self.color_rgb = (100, 161, 139)
