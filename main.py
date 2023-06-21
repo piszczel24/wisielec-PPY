@@ -1,5 +1,5 @@
 from game import Game
-from player import Player
+from playerdto import PlayerDto
 from windows import *
 import tkinter as tk
 

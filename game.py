@@ -1,5 +1,5 @@
 import pygame
-from player import Player
+from playerdto import PlayerDto
 from button import Button
 
 WIDTH = 1600
@@ -18,7 +18,7 @@ def find_indexes(letter: str, text: str) -> list[int]:
 
 
 class Game:
-    def __init__(self, player1: Player, player2: Player) -> None:
+    def __init__(self, player1: PlayerDto, player2: PlayerDto) -> None:
         pygame.init()
 
         # Zmienne globalne
