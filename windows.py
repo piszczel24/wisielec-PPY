@@ -27,6 +27,10 @@ def hash_password(password: str) -> str:
     return hashed_password.decode('utf-8')
 
 
+def verify_password(password: str, hashed_password: str) -> bool:
+    return bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8'))
+
+
 class Player(Base):
     __tablename__ = "Player"
 
@@ -63,6 +67,8 @@ class StartWindow(tk.Tk):
         self.resizable(False, False)
         self.config(bg=BG_COLOR)
 
+        self.logged_players: list[Player] = []
+
         game_title = tk.Label(self, text="WISIELEC", font=("Comic sans MS", 50), pady=30, bg=BG_COLOR)
         game_title.pack()
 
@@ -86,7 +92,7 @@ class StartWindow(tk.Tk):
                                    height=1, bg=BUTTON_COLOR, activebackground=BUTTON_COLOR)
         options_button.pack(side=tk.LEFT, padx=10)
 
-        exit_app_button = tk.Button(self, text="EXIT", font=BUTTON_FONT, command=self.exit_app, width=12, height=1,
+        exit_app_button = tk.Button(self, text="WYJDŹ", font=BUTTON_FONT, command=self.exit_app, width=12, height=1,
                                     bg=BUTTON_COLOR, activebackground=BUTTON_COLOR)
         exit_app_button.pack(side=tk.LEFT, padx=10)
 
@@ -100,7 +106,9 @@ class StartWindow(tk.Tk):
         self.deiconify()
 
     def login_player(self) -> None:
-        pass
+        self.withdraw()
+        Login(self)
+        self.deiconify()
 
     def register_player(self) -> None:
         self.withdraw()
@@ -149,9 +157,9 @@ class RegisterPlayer(tk.Tk):
         confirm_button = tk.Button(self, text="ZAREJESTRUJ", font=BUTTON_FONT,
                                    command=lambda: self.add_to_db(nickname_entry.get(), password_entry.get()), width=12,
                                    height=1, bg=BUTTON_COLOR, activebackground=BUTTON_COLOR)
-        confirm_button.place(x=500, y=400)
+        confirm_button.place(x=250, y=500)
 
-    def add_to_db(self, nickname: str, password: str):
+    def add_to_db(self, nickname: str, password: str) -> None:
         session = Session()
         max_id = session.query(func.max(Player.id_player)).scalar()
         max_id = max_id or 0
@@ -160,6 +168,53 @@ class RegisterPlayer(tk.Tk):
         session.commit()
         self.destroy()
         messagebox.showinfo("Rejestracja", "Zarejestrowano pomyślnie!")
+
+
+class Login(tk.Tk):
+    def __init__(self, master: StartWindow) -> None:
+        super().__init__()
+        self.title("Rejestracja")
+
+        window_width = 600
+        window_height = 700
+        x = (SCREEN_WIDTH - window_width) // 2
+        y = (SCREEN_HEIGHT - window_height) // 2
+
+        self.geometry(f"{window_width}x{window_height}+{x}+{y}")
+        self.resizable(False, False)
+        self.config(bg=BG_COLOR)
+
+        title_label = tk.Label(self, text="LOGOWANIE", font=("Comic sans MS", 50), pady=30, bg=BG_COLOR)
+        title_label.pack()
+
+        nickname_label = tk.Label(self, text="LOGIN:", font=FORM_BUTTON_FONT, pady=10, bg=BG_COLOR)
+        nickname_label.pack()
+
+        nickname_entry = tk.Entry(self)
+        nickname_entry.place(x=200, y=250, width=200, height=30)
+
+        password_label = tk.Label(self, text="HASŁO:", font=FORM_BUTTON_FONT, pady=10, bg=BG_COLOR)
+        password_label.place(x=220, y=300)
+
+        password_entry = tk.Entry(self, show="*")
+        password_entry.place(x=200, y=400, width=200, height=30)
+
+        confirm_button = tk.Button(self, text="ZALOGUJ", font=BUTTON_FONT,
+                                   command=lambda: self.check_in_db(nickname_entry.get(), password_entry.get(), master),
+                                   width=12, height=1, bg=BUTTON_COLOR, activebackground=BUTTON_COLOR)
+        confirm_button.place(x=250, y=500)
+
+    def check_in_db(self, nickname: str, password: str, master: StartWindow):
+        session = Session()
+        player = session.query(Player).filter_by(nickname=nickname).first()
+        if player and verify_password(password, player.password):
+            self.destroy()
+            master.logged_players.append(player)
+            messagebox.showinfo("Logowanie", "Zalogowano pomyślnie!")
+        else:
+            self.destroy()
+            messagebox.showinfo("Logowanie", "Błędny login lub hasło!")
+        session.commit()
 
 
 elo = StartWindow()
