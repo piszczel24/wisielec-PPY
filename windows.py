@@ -38,6 +38,7 @@ class StartWindow(tk.Tk):
 
     def __init__(self) -> None:
         super().__init__()
+        self.session = Session()
         self.title("Wisielec")
 
         db_initialize.db_initialize()
@@ -81,13 +82,13 @@ class StartWindow(tk.Tk):
         exit_app_button.pack(side=tk.LEFT, padx=10)
 
     def start_game(self) -> None:
-        self.withdraw()
-        player1 = PlayerDto(1, "Adam")
-        player2 = PlayerDto(2, "Bartosz")
-
-        game = Game(player1, player2)
-        game.run()
-        self.deiconify()
+        if len(self.logged_players) >= 2:
+            self.withdraw()
+            game = Game(self.session.merge(self.logged_players[0]), self.session.merge(self.logged_players[1]))
+            game.run()
+            self.deiconify()
+        else:
+            messagebox.showinfo("Błąd", "Za mało zalogowanych graczy!")
 
     def login_player(self) -> None:
         self.withdraw()
