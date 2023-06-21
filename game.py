@@ -6,13 +6,12 @@ WIDTH = 1600
 HEIGHT = 900
 FPS = 60
 BG_COLOR = (9, 161, 139)
+ALPHABET = "AĄBCĆDEĘFGHIJKLŁMNŃOÓPRSŚTUWYZŻŹ"
 
 
 class Game:
     def __init__(self, player1: Player, player2: Player) -> None:
         pygame.init()
-
-        self.hangman_rect_vis = True
 
         # Zmienne globalne
         self.clock = pygame.time.Clock()
@@ -23,7 +22,6 @@ class Game:
 
         # Szkielet aplikacji
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
-        self.screen.fill(BG_COLOR)
         pygame.display.set_caption("Wisielec")
         pygame.display.set_icon(pygame.image.load("img/icon.png"))
 
@@ -46,7 +44,16 @@ class Game:
         self.category_surface = self.category_font.render(f"Kategoria: {self.category}", True, "black")
         self.category_rect = self.category_surface.get_rect(topleft=(40, 630))
 
-        self.button = Button(800, 100, 50, 50, "A", self.screen)
+        self.buttons = []
+        horizontal_offset = 200
+        vertical_offset = 100
+
+        alphabet_letter_number = 0
+        for i in range(8):
+            for j in range(4):
+                self.buttons.append(Button(800 + (j * horizontal_offset), 100 + (i * vertical_offset), 50, 50,
+                                           ALPHABET[alphabet_letter_number], self.screen))
+                alphabet_letter_number += 1
 
     def run(self) -> None:
         # Gra właściwa
@@ -62,19 +69,19 @@ class Game:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.is_running = False
-            if event.type == pygame.MOUSEBUTTONDOWN and self.button.is_visible:
-                if self.hangman_rect.collidepoint(event.pos):
-                    self.hangman_rect_vis = False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                for button in self.buttons:
+                    if button.collidepoint(event.pos):
+                        button.is_visible = False
 
     def draw_countent(self):
-
-        if self.hangman_rect_vis:
-            self.hangman_surface = self.images[self.current_step]
-            self.screen.blit(self.hangman_surface, self.hangman_rect)
+        self.screen.fill(BG_COLOR)
+        self.hangman_surface = self.images[self.current_step]
+        self.screen.blit(self.hangman_surface, self.hangman_rect)
         self.screen.blit(self.current_player_surface, self.current_player_rect)
         self.screen.blit(self.category_surface, self.category_rect)
-        print(self.hangman_rect_vis)
-        # self.button.draw()
+        for button in self.buttons:
+            button.draw()
         pygame.display.update()
 
 

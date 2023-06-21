@@ -12,11 +12,11 @@ class Button(pygame.Rect):
         self.is_visible = True
 
         self.color_rgb = (100, 161, 139)
-        self.font = pygame.font.SysFont("Comic sans MS", 40)
+        self.font = pygame.font.SysFont("Comic sans MS", 35)
         self.letter_surface = self.font.render(letter, True, "black")
         self.letter_rect = self.letter_surface.get_rect(center=self.center)
 
     def draw(self):
-        print(self.is_visible)
-        pygame.draw.rect(self.surface, self.color_rgb, self)
-        self.surface.blit(self.letter_surface, self.letter_rect)
+        if self.is_visible:
+            pygame.draw.rect(self.surface, self.color_rgb, self)
+            self.surface.blit(self.letter_surface, self.letter_rect)
