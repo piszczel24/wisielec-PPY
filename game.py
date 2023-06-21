@@ -1,12 +1,21 @@
 import pygame
-from playerdto import PlayerDto
+from sqlalchemy import create_engine, func
+from sqlalchemy.orm import sessionmaker, declarative_base
+
 from button import Button
+from playerdto import PlayerDto
+from db_initialize import Player, Category, Word
 
 WIDTH = 1600
 HEIGHT = 900
 FPS = 60
 BG_COLOR = (9, 161, 139)
 ALPHABET = "AĄBCĆDEĘFGHIJKLŁMNŃOÓPRSŚTUWYZŻŹ"
+
+Base = declarative_base()
+
+engine = create_engine("postgresql://pycharm:pycharm@localhost:5432/postgres", echo=True)
+Session = sessionmaker(bind=engine)
 
 
 def find_indexes(letter: str, text: str) -> list[int]:
@@ -37,9 +46,14 @@ class Game:
         self.current_step = 0
         self.players = [player1, player2]
         self.current_player = 0
-        self.category = "Literaturoznawstwo"
-        self.word = "Anastazja".upper()
-        self.letters_remaining = len(self.word)
+
+        self.session = Session()
+        self.category, self.word = self.pick_category_and_word()
+        self.category_string = self.category.name
+        self.word_string = self.word.word.upper()
+        self.session.commit()
+
+        self.letters_remaining = len(self.word_string)
         self.guessed_word_list = ["_" for _ in range(self.letters_remaining)]
         self.guessed_word = self.get_guessed_word()
         self.winner = None
@@ -52,7 +66,7 @@ class Game:
             f"Tura gracza: {self.players[self.current_player].nickname}", True, "black")
         self.current_player_rect = self.current_player_surface.get_rect(midtop=(1100, 10))
 
-        self.category_surface = self.word_font.render(f"Kategoria: {self.category}", True, "black")
+        self.category_surface = self.word_font.render(f"Kategoria: {self.category_string}", True, "black")
         self.category_rect = self.category_surface.get_rect(topleft=(40, 630))
 
         self.guessed_word_surface = self.word_font.render(self.guessed_word, True, "black")
@@ -83,8 +97,8 @@ class Game:
                         self.change_player()
 
     def check_letter(self, button: Button) -> None:
-        if button.letter in self.word:
-            indexes = find_indexes(button.letter, self.word)
+        if button.letter in self.word_string:
+            indexes = find_indexes(button.letter, self.word_string)
             for index in indexes:
                 self.guessed_word_list[index] = button.letter
                 self.guessed_word = self.get_guessed_word()
@@ -142,3 +156,8 @@ class Game:
             self.current_player = 1
         elif self.current_player == 1:
             self.current_player = 0
+
+    def pick_category_and_word(self) -> Category:
+        category: Category = self.session.query(Category).order_by(func.random()).first()
+        word = self.session.query(Word).filter_by(category_id=category.id).order_by(func.random()).first()
+        return category, word

@@ -1,10 +1,12 @@
 import tkinter as tk
-from tkinter import messagebox
+import tkinter.messagebox as messagebox
 
 import bcrypt
-from sqlalchemy import create_engine, Column, String, Integer, func
+from sqlalchemy import create_engine, func
 from sqlalchemy.orm import sessionmaker, declarative_base
 
+import db_initialize
+from db_initialize import Player
 from game import Game
 from playerdto import PlayerDto
 
@@ -22,31 +24,11 @@ Session = sessionmaker(bind=engine)
 
 
 def hash_password(password: str) -> str:
-    salt = bcrypt.gensalt()
-    hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt)
-    return hashed_password.decode('utf-8')
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
 
 def verify_password(password: str, hashed_password: str) -> bool:
     return bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8'))
-
-
-class Player(Base):
-    __tablename__ = "Player"
-
-    id_player = Column("IdPlayer", Integer, primary_key=True)
-    nickname = Column("Nickname", String)
-    password = Column("Password", String)
-    best_score = Column("BestScore", Integer)
-
-    def __init__(self, id_player, nickname, password):
-        self.id_player = id_player
-        self.nickname = nickname
-        self.password = password
-        self.best_score = 0
-
-    def add_win(self):
-        self.best_score += 1
 
 
 Base.metadata.create_all(bind=engine)
@@ -58,6 +40,7 @@ class StartWindow(tk.Tk):
         super().__init__()
         self.title("Wisielec")
 
+        db_initialize.db_initialize()
         window_width = 800
         window_height = 400
         x = (SCREEN_WIDTH - window_width) // 2
@@ -92,7 +75,8 @@ class StartWindow(tk.Tk):
                                    height=1, bg=BUTTON_COLOR, activebackground=BUTTON_COLOR)
         options_button.pack(side=tk.LEFT, padx=10)
 
-        exit_app_button = tk.Button(self, text="WYJDŹ", font=BUTTON_FONT, command=self.exit_app, width=12, height=1,
+        exit_app_button = tk.Button(self, text="WYJDŹ", font=BUTTON_FONT, command=self.exit_app, width=12,
+                                    height=1,
                                     bg=BUTTON_COLOR, activebackground=BUTTON_COLOR)
         exit_app_button.pack(side=tk.LEFT, padx=10)
 
@@ -107,12 +91,12 @@ class StartWindow(tk.Tk):
 
     def login_player(self) -> None:
         self.withdraw()
-        Login(self)
+        LoginWindow(self)
         self.deiconify()
 
     def register_player(self) -> None:
         self.withdraw()
-        RegisterPlayer()
+        RegisterWindow()
         self.deiconify()
 
     def show_stats(self) -> None:
@@ -123,9 +107,10 @@ class StartWindow(tk.Tk):
 
     def exit_app(self) -> None:
         self.destroy()
+        self.quit()
 
 
-class RegisterPlayer(tk.Tk):
+class RegisterWindow(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
         self.title("Rejestracja")
@@ -170,7 +155,7 @@ class RegisterPlayer(tk.Tk):
         messagebox.showinfo("Rejestracja", "Zarejestrowano pomyślnie!")
 
 
-class Login(tk.Tk):
+class LoginWindow(tk.Tk):
     def __init__(self, master: StartWindow) -> None:
         super().__init__()
         self.title("Rejestracja")
@@ -215,6 +200,24 @@ class Login(tk.Tk):
             self.destroy()
             messagebox.showinfo("Logowanie", "Błędny login lub hasło!")
         session.commit()
+
+
+class StatsWindow(tk.Tk):
+    def __init__(self) -> None:
+        super().__init__()
+        self.title("Rejestracja")
+
+        window_width = 600
+        window_height = 700
+        x = (SCREEN_WIDTH - window_width) // 2
+        y = (SCREEN_HEIGHT - window_height) // 2
+
+        self.geometry(f"{window_width}x{window_height}+{x}+{y}")
+        self.resizable(False, False)
+        self.config(bg=BG_COLOR)
+
+        title_label = tk.Label(self, text="Statystyki graczy", font=("Comic sans MS", 20), pady=30, bg=BG_COLOR)
+        title_label.pack()
 
 
 elo = StartWindow()
