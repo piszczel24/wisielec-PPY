@@ -1,7 +1,7 @@
 import pygame
 from sqlalchemy import create_engine, func
 from sqlalchemy.orm import sessionmaker, declarative_base
-
+import tkinter.messagebox as messagebox
 from button import Button
 from playerdto import PlayerDto
 from db_initialize import Player, Category, Word
@@ -144,12 +144,12 @@ class Game:
         if self.current_step == 10:
             self.is_running = False
             self.winner = self.players[self.current_player]
-            print(f"WINNER: {self.winner.nickname}")
+            messagebox.showinfo("Gratulacje", f"Wygrał gracz: {self.winner.nickname}")
         elif self.letters_remaining <= 0:
             self.change_player()
             self.is_running = False
             self.winner = self.players[self.current_player]
-            print(f"WINNER: {self.winner.nickname}")
+            messagebox.showinfo("Gratulacje", f"Wygrał gracz: {self.winner.nickname}")
 
     def change_player(self) -> None:
         if self.current_player == 0:
