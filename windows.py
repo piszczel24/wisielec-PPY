@@ -28,7 +28,9 @@ def hash_password(password: str) -> str:
 
 def add_to_db(nickname: str, password: str):
     session = Session()
-    max_id = int(session.query(func.max(Player.id_player)).scalar())
+    max_id = session.query(func.max(Player.id_player)).scalar()
+    max_id = max_id or 0
+    max_id = int(max_id)
     session.add(Player(max_id + 1, nickname, hash_password(password)))
     session.commit()
 
