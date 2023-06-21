@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import messagebox
 
 import bcrypt
 from sqlalchemy import create_engine, Column, String, Integer, func
@@ -26,26 +27,17 @@ def hash_password(password: str) -> str:
     return hashed_password.decode('utf-8')
 
 
-def add_to_db(nickname: str, password: str):
-    session = Session()
-    max_id = session.query(func.max(Player.id_player)).scalar()
-    max_id = max_id or 0
-    max_id = int(max_id)
-    session.add(Player(max_id + 1, nickname, hash_password(password)))
-    session.commit()
-
-
 class Player(Base):
     __tablename__ = "Player"
 
     id_player = Column("IdPlayer", Integer, primary_key=True)
-    login = Column("Login", String)
+    nickname = Column("Nickname", String)
     password = Column("Password", String)
     best_score = Column("BestScore", Integer)
 
-    def __init__(self, id_player, login, password):
+    def __init__(self, id_player, nickname, password):
         self.id_player = id_player
-        self.login = login
+        self.nickname = nickname
         self.password = password
         self.best_score = 0
 
@@ -126,7 +118,7 @@ class StartWindow(tk.Tk):
 
 
 class RegisterPlayer(tk.Tk):
-    def __init__(self, ) -> None:
+    def __init__(self) -> None:
         super().__init__()
         self.title("Rejestracja")
 
@@ -155,10 +147,19 @@ class RegisterPlayer(tk.Tk):
         password_entry.place(x=200, y=400, width=200, height=30)
 
         confirm_button = tk.Button(self, text="ZAREJESTRUJ", font=BUTTON_FONT,
-                                   command=add_to_db(nickname_entry.get(), password_entry.get()), width=12, height=1,
-                                   bg=BUTTON_COLOR, activebackground=BUTTON_COLOR)
+                                   command=lambda: self.add_to_db(nickname_entry.get(), password_entry.get()), width=12,
+                                   height=1, bg=BUTTON_COLOR, activebackground=BUTTON_COLOR)
         confirm_button.place(x=500, y=400)
 
+    def add_to_db(self, nickname: str, password: str):
+        session = Session()
+        max_id = session.query(func.max(Player.id_player)).scalar()
+        max_id = max_id or 0
+        max_id = int(max_id)
+        session.add(Player(max_id + 1, nickname, hash_password(password)))
+        session.commit()
+        self.destroy()
 
-elo = RegisterPlayer()
+
+elo = StartWindow()
 elo.mainloop()
