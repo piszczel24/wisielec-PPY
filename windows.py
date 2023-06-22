@@ -1,10 +1,10 @@
+import csv
 import tkinter as tk
 import tkinter.messagebox as messagebox
-
+from tkinter import ttk, filedialog
 import bcrypt
 from sqlalchemy import create_engine, func
 from sqlalchemy.orm import sessionmaker, declarative_base
-
 import db_initialize
 from db_initialize import Player
 from game import Game
@@ -103,7 +103,9 @@ class StartWindow(tk.Tk):
         self.deiconify()
 
     def show_stats(self) -> None:
-        pass
+        self.withdraw()
+        StatsWindow()
+        self.deiconify()
 
     def show_options(self) -> None:
         self.withdraw()
@@ -221,8 +223,49 @@ class StatsWindow(tk.Tk):
         self.resizable(False, False)
         self.config(bg=BG_COLOR)
 
+        session = Session()
+        self.players = session.query(Player).all()
+        self.players = sorted(self.players, key=lambda player: player.id_player)
+        session.close()
+
         title_label = tk.Label(self, text="Statystyki graczy", font=("Comic sans MS", 20), pady=30, bg=BG_COLOR)
         title_label.pack()
+
+        tree = ttk.Treeview(self, height=20)
+        tree["columns"] = ("Nickname", "BestScore")
+        tree.heading("#0", text="ID")
+        tree.heading("Nickname", text="Nazwa użytkownika")
+        tree.heading("BestScore", text="Wynik")
+
+        tree.column("#0", width=50, minwidth=50, anchor=tk.CENTER)
+        tree.column("Nickname", width=300, minwidth=300, anchor=tk.CENTER)
+        tree.column("BestScore", width=50, minwidth=50, anchor=tk.CENTER)
+
+        i = 1
+        for player in self.players:
+            tree.insert("", "end", text=f"{i}", values=(player.nickname, player.best_score))
+            i += 1
+
+        tree.pack(padx=50)
+
+        export_button = tk.Button(self, text="EKSPORTUJ", font=BUTTON_FONT, command=self.export, width=12, height=1,
+                                  bg=BUTTON_COLOR, activebackground=BUTTON_COLOR)
+        export_button.place(x=140, y=600)
+
+        go_back_button = tk.Button(self, text="POWRÓT", font=BUTTON_FONT, command=self.destroy, width=12, height=1,
+                                   bg=BUTTON_COLOR, activebackground=BUTTON_COLOR)
+        go_back_button.place(x=350, y=600)
+
+    def export(self):
+        file_path = filedialog.asksaveasfilename(defaultextension=".csv", filetypes=[("CSV Files", "*.csv")])
+        if not file_path:
+            return
+        with open(file_path, mode="w", newline="") as file:
+            writer = csv.writer(file)
+            writer.writerow(["IdPlayer", "Nickname", "BestScore"])
+            for player in self.players:
+                writer.writerow([player.id_player, player.nickname, player.best_score])
+        messagebox.showinfo("Sukces", "Importowanie zakończone sukcesem!")
 
 
 class OptionsWindow(tk.Tk):
