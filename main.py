@@ -1,3 +1,5 @@
+"""Główny moduł programu"""
+
 from windows import *
 
 if __name__ == "__main__":
