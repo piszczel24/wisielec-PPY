@@ -92,7 +92,8 @@ class Game:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 for button in self.buttons:
                     if button.collidepoint(event.pos):
-                        button.is_visible = False
+                        if self.difficulty == 0:
+                            button.is_visible = False
 
                         self.check_letter(button)
                         self.change_player()
