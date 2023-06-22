@@ -41,7 +41,7 @@ def find_indexes(letter: str, text: str) -> list[int]:
         text: Napisa, w którym występowań litery szukamy.
 
     Returns:
-        Zwracana wartość. Lista indeksów, na których znajduję się dany znak w napisie.
+        Lista indeksów, na których znajduję się dany znak w napisie.
 
     """
     indexes = []
@@ -136,6 +136,7 @@ class Game:
         self.load_buttons()
 
     def run(self) -> None:
+        """Odpala grę w pętli."""
         print(f"Poziom trudności: {self.difficulty}")
         while self.is_running:
             self.check_input()
@@ -146,6 +147,7 @@ class Game:
         pygame.quit()
 
     def check_input(self) -> None:
+        """Sprawdza input gracza w event loopie"""
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.is_running = False
@@ -159,6 +161,12 @@ class Game:
                         self.change_player()
 
     def check_letter(self, button: Button) -> None:
+        """Sprawdza, czy litera na klikniętym przycisku jest w słowie. Jeżeli nie, to rysujemy wysielca.
+
+        Args:
+            button: Przycisk, którego litera jest sprawdzana.
+
+        """
         if button.letter in self.word_string:
             indexes = find_indexes(button.letter, self.word_string)
             for index in indexes:
@@ -169,6 +177,7 @@ class Game:
             self.current_step += 1
 
     def draw_content(self) -> None:
+        """Rysuje całą zwartość gry."""
         self.screen.fill(BG_COLOR)
         self.hangman_surface = self.images[self.current_step]
         self.screen.blit(self.hangman_surface, self.hangman_rect)
@@ -185,6 +194,7 @@ class Game:
         pygame.display.update()
 
     def load_buttons(self) -> None:
+        """Inicjuje wszysktie przyciski z literami do atrybutu buttons."""
         horizontal_offset = 200
         vertical_offset = 100
         alphabet_letter_number = 0
@@ -195,6 +205,11 @@ class Game:
                 alphabet_letter_number += 1
 
     def get_guessed_word(self) -> str:
+        """Zamienia atrybut guessed_word _list na napis
+
+        Returns:
+            Zgadywane słowo z brakującymi literami w postaci "_" jako napis.
+        """
         result = ""
         for letter in self.guessed_word_list:
             result += letter
@@ -202,6 +217,10 @@ class Game:
         return result
 
     def check_finish(self) -> None:
+        """Sprawdza czy gra się skończyła.
+
+        Po ygranej funckaj dodaje zwycięzscy +1 do wyników.
+        """
         if self.current_step == 10:
             self.is_running = False
             self.winner = self.players[self.current_player]
@@ -215,12 +234,18 @@ class Game:
             messagebox.showinfo("Gratulacje", f"Wygrał gracz: {self.winner.nickname}")
 
     def change_player(self) -> None:
+        """Zmienia turę gracza."""
         if self.current_player == 0:
             self.current_player = 1
         elif self.current_player == 1:
             self.current_player = 0
 
     def pick_category_and_word(self) -> tuple[Type[Category] | None, Type[Word] | None]:
+        """Losuje z bazy danych kategorię oraz związane z nią słowo.
+
+        Returns:
+            Kategoria oraz związane z nią słowo.
+        """
         category = self.session.query(Category).order_by(func.random()).first()
         word = self.session.query(Word).filter_by(category_id=category.id).order_by(func.random()).first()
         return category, word
