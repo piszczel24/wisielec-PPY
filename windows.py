@@ -196,7 +196,7 @@ class LoginWindow(tk.Tk):
                                    width=12, height=1, bg=BUTTON_COLOR, activebackground=BUTTON_COLOR)
         confirm_button.place(x=250, y=500)
 
-    def check_in_db(self, nickname: str, password: str, master: StartWindow):
+    def check_in_db(self, nickname: str, password: str, master: StartWindow) -> None:
         session = Session()
         player = session.query(Player).filter_by(nickname=nickname).first()
         if player and verify_password(password, player.password):
@@ -256,7 +256,7 @@ class StatsWindow(tk.Tk):
                                    bg=BUTTON_COLOR, activebackground=BUTTON_COLOR)
         go_back_button.place(x=350, y=600)
 
-    def export(self):
+    def export(self) -> None:
         file_path = filedialog.asksaveasfilename(defaultextension=".csv", filetypes=[("CSV Files", "*.csv")])
         if not file_path:
             return
@@ -302,5 +302,5 @@ class OptionsWindow(tk.Tk):
                                    bg=BUTTON_COLOR, activebackground=BUTTON_COLOR)
         confirm_button.pack(pady=50)
 
-    def select(self, index):
+    def select(self, index: int) -> None:
         self.master.difficulty = index

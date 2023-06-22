@@ -13,13 +13,13 @@ class Player(Base):
     password = Column("Password", String)
     best_score = Column("BestScore", Integer)
 
-    def __init__(self, id_player, nickname, password):
+    def __init__(self, id_player, nickname, password) -> None:
         self.id_player = id_player
         self.nickname = nickname
         self.password = password
         self.best_score = 0
 
-    def add_win(self):
+    def add_win(self) -> None:
         Session = sessionmaker(bind=engine)
         session = Session()
         self.best_score += 1
@@ -40,7 +40,7 @@ class Category(Base):
     name = Column(String(50), nullable=False)
 
 
-def db_initialize():
+def db_initialize() -> None:
     Base.metadata.create_all(engine)
     Session = sessionmaker(bind=engine)
     session = Session()

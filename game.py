@@ -72,6 +72,10 @@ class Game:
         self.guessed_word_surface = self.word_font.render(self.guessed_word, True, "black")
         self.guessed_word_rect = self.guessed_word_surface.get_rect(topleft=(40, 750))
 
+        self.number_on_clock = 5
+        self.timer_surface = self.player_font.render(f"{self.number_on_clock}", True, "black")
+        self.timer_rect = self.timer_surface.get_rect(topright=(1550, 0))
+
         self.buttons = []
         self.load_buttons()
 
@@ -108,8 +112,6 @@ class Game:
         elif self.current_step <= 11:
             self.current_step += 1
 
-    # def check_finish(self):
-
     def draw_content(self) -> None:
         self.screen.fill(BG_COLOR)
         self.hangman_surface = self.images[self.current_step]
@@ -123,6 +125,11 @@ class Game:
         self.screen.blit(self.guessed_word_surface, self.guessed_word_rect)
         for button in self.buttons:
             button.draw()
+
+        if self.difficulty == 1:
+            self.number_on_clock = 5 - (pygame.time.get_ticks() // 1000 % 5)
+            self.timer_surface = self.player_font.render(f"{self.number_on_clock}", True, "black")
+            self.screen.blit(self.timer_surface, self.timer_rect)
         pygame.display.update()
 
     def load_buttons(self) -> None:
