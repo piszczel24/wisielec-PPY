@@ -1,3 +1,12 @@
+"""Moduł zawiera klasy, będące reprezentacją klas z bazy danych.
+
+Baza danych jest inicjalizowana za pomocą ORM SQLAlchemy. Używana jest baza PostgreSQL.
+
+Attributes:
+    Base: Klasa będąca reprezentacją bazy deklaratywnej.
+    engine (sqlalchemy.engine.Engine): Silnik bazy danych, łączący się z nią przez connection stringa.
+
+"""
 from sqlalchemy import create_engine, Integer, String, Column
 from sqlalchemy.orm import sessionmaker, declarative_base
 
@@ -6,6 +15,22 @@ engine = create_engine("postgresql://pycharm:pycharm@localhost:5432/postgres", e
 
 
 class Player(Base):
+    """Klasa reprezentuje tabelę zawierającą dane graczy w bazie danych i jednocześnie reprezentująca gracza.
+
+    Args:
+        id_player: Klucz główny - identyfikator gracza.
+        nickname: Pseudonim gracza.
+        password: Zahashowane hasło gracza.
+
+    Attributes:
+        __tablename__ (str): Nazwa tabeli w bazie danych.
+        id_player (sqlalchemy.sql.schema.Column): Kolumna w bazie danych zawierająca klucz główny - identyfikator
+            gracza.
+        nickname (sqlalchemy.sql.schema.Column): Kolumna w bazie danych zawierająca pseudonium gracza.
+        password (sqlalchemy.sql.schema.Column): Kolumna w bazie danych zawierająca zahashowane hasło gracza.
+        best_score (sqlalchemy.sql.schema.Column): Kolumna w bazie danych zawierająca rekord wygranych gracza.
+
+    """
     __tablename__ = "Player"
 
     id_player = Column("IdPlayer", Integer, primary_key=True)
@@ -20,6 +45,7 @@ class Player(Base):
         self.best_score = 0
 
     def add_win(self) -> None:
+        """Dodaje graczowi jedną wygraną w kolomnie best_score"""
         Session = sessionmaker(bind=engine)
         session = Session()
         self.best_score += 1
@@ -28,6 +54,16 @@ class Player(Base):
 
 
 class Word(Base):
+    """Klasa reprezentuje tabelę zawierającą słowa w bazie danych i jednocześnie reprezentująca słowo.
+
+    Attributes:
+        __tablename__ (str): Nazwa tabeli w bazie danych.
+        id (sqlalchemy.sql.schema.Column): Kolumna w bazie danych zawierająca klucz główny - identyfikator słowa.
+        word (sqlalchemy.sql.schema.Column): Kolumna w bazie danych zawierająca właściwe słowo.
+        category_id (sqlalchemy.sql.schema.Column): Kolumna w bazie danych zawierająca klucz
+            obcy - odniesienie do kategorii, do której należy słowo.
+
+    """
     __tablename__ = 'word'
     id = Column(Integer, primary_key=True)
     word = Column(String(50), nullable=False)
@@ -35,12 +71,21 @@ class Word(Base):
 
 
 class Category(Base):
+    """Klasa reprezentuje tabelę zawierającą kategorie w bazie danych i jednocześnie reprezentująca kategorię.
+
+    Attributes:
+        __tablename__ (str): Nazwa tabeli w bazie danych.
+        id (sqlalchemy.sql.schema.Column): Kolumna w bazie danych zawierająca klucz główny - identyfikator kategorii.
+        name (sqlalchemy.sql.schema.Column): Kolumna w bazie danych zawierająca nazwę kategorii.
+
+    """
     __tablename__ = 'category'
     id = Column(Integer, primary_key=True)
     name = Column(String(50), nullable=False)
 
 
 def db_initialize() -> None:
+    """Wstawia do bazy danych przykładowe dane; inicjalizuje tabele w bazie danych."""
     Base.metadata.create_all(engine)
     Session = sessionmaker(bind=engine)
     session = Session()

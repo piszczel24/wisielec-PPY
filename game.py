@@ -1,7 +1,23 @@
+"""Moduł zawiera klasę z grą, w tym całą jej mechanikę.
+
+Attributes:
+    WIDTH (int): Szerokość okna gry.
+    HEIGHT (int): Wysokość okna gry.
+    FPS (int): Ilość renderowanych klatek na sekundę.
+    BG_COLOR (touple[int, int, int]): Kolor tła w formacie RGB.
+    ALPHABET (str): Polski alfabet.
+    Base: Klasa będąca reprezentacją bazy deklaratywnej.
+    engine (sqlalchemy.engine.Engine): Silnik bazy danych, łączący się z nią przez connection stringa.
+    Session: Klasa reprezentująca sesję połączenia z bazą danych.
+
+"""
 import tkinter.messagebox as messagebox
+from typing import Type
+
 import pygame
 from sqlalchemy import create_engine, func
 from sqlalchemy.orm import sessionmaker, declarative_base
+
 from button import Button
 from db_initialize import Category, Word, Player
 
@@ -18,6 +34,16 @@ Session = sessionmaker(bind=engine)
 
 
 def find_indexes(letter: str, text: str) -> list[int]:
+    """Znajduje wszystkie indeksy, na których znajduję się konkretny znak w napisie.
+
+    Args:
+        letter: Litera, kórej występowania szukamy.
+        text: Napisa, w którym występowań litery szukamy.
+
+    Returns:
+        Zwracana wartość. Lista indeksów, na których znajduję się dany znak w napisie.
+
+    """
     indexes = []
     for i, char in enumerate(text):
         if char == letter:
@@ -26,23 +52,58 @@ def find_indexes(letter: str, text: str) -> list[int]:
 
 
 class Game:
+    """Klasa reprezentuje grę i zawiera jej całą mechanikę.
+
+    Args:
+        player1: Pierwszy gracz biorący udział w rozgrywce.
+        player2: Drugi gracz biorący udział w rozgrywce.
+
+    Attributes:
+        clock (pygame.time.Clock): Zegar pomagający taktować odświerzanie klatek.
+        player_font (tkinter.font.Font): Czcionka użwywana przy przy renderowaniu napisu, kogo jest tura.
+        word_font (tkinter.font.Font): Czcionka użwywana przy przy renderowaniu kategorii i słowa.
+        is_running (bool): Prawda, jeżeli rogrywka ma trwać nadal.
+        images (list[pygame.Surface]): Lista zawierająca obrazki ze stanem wisielca.
+        screen (pygame.Surface): Powierzchnia będąca głównym ekranem gry.
+        difficulty (int): Poziom trudności: 0 - klasyczny, 1 - hradcore.
+        current_step (int): Obecny stan wisielca 0 - 10.
+        players (list[Player]): Lista zawierająca graczy biorących udział w rozgrywce.
+        current_player (int): Indeks obecnego gracza (z listy players).
+        session (sqlalchemy.orm.Session): Sesja połączenia do bazy danych.
+        category (Category): Kategoria zgadywanego słowa.
+        word (Word): Zgadywane sowo.
+        category_string (str): Kategoria zgadywanego słowa w postaci napisu.
+        word_string (str): Zgadywane sowo w postaci napisu.
+        letters_remaining (int): Liczba liter, kórych brakuje do zgadnięcia słowa.
+        guessed_word_list (list[str]: Reprezentacja zgadniętych liter, w przypadku niezgadniętych jest "_".
+        guessed_word (str): Reprezentacja guessed_word_list w postaci napisu.
+        winner (Player): Zwycięzca.
+        hangman_surface (pygame.Surface): Powierzchnia z wisielcem.
+        hangman_rect (pygame.Rect): Prostokąt z powierzchnią z wisielcem.
+        current_player_surface (pygame.Surface): Powierzchnia z napisem, kogo jest tura.
+        current_player_rect (pygame.Rect): Prostokąt z powierzchnią z napisem, kogo jest tura.
+        category_surface (pygame.Surface): Powierzchnia z napisem zawierającym kategorię.
+        category_rect (pygame.Rect): Prostokąt z powierzchnią z napisem zawierającym kategorię.
+        guessed_word_surface (pygame.Surface): Powierzchnia z napisem zawierającym guessed_word.
+        guessed_word_rect (pygame.Rect): Prostokąt z powierzchnią z napisem zawierającym guessed_word.
+        buttons (list[Button]): Lista zwierające wszystkie przyciski z literami.
+
+    """
+
     def __init__(self, player1: Player, player2: Player) -> None:
         pygame.init()
 
-        # Zmienne globalne
         self.clock = pygame.time.Clock()
         self.player_font = pygame.font.SysFont("Comic sans MS", 50)
         self.word_font = pygame.font.SysFont("Comic sans MS", 40)
         self.is_running = True
         self.images = [pygame.image.load(f"img/{i}.png") for i in range(11)]
 
-        # Szkielet aplikacji
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         pygame.display.set_caption("Wisielec")
         pygame.display.set_icon(pygame.image.load("img/icon.png"))
 
-        # Zeminne dot. bierzącej gry
-        self.difficulty = 0  # 0-klasyczny 1-hardcore
+        self.difficulty = 0
         self.current_step = 0
         self.players = [player1, player2]
         self.current_player = 0
@@ -56,9 +117,8 @@ class Game:
         self.letters_remaining = len(self.word_string)
         self.guessed_word_list = ["_" for _ in range(self.letters_remaining)]
         self.guessed_word = self.get_guessed_word()
-        self.winner: Player = None
+        self.winner = None
 
-        # Elementy na ekranie
         self.hangman_surface = self.images[0]
         self.hangman_rect = self.hangman_surface.get_rect(midleft=(0, 300))
 
@@ -71,10 +131,6 @@ class Game:
 
         self.guessed_word_surface = self.word_font.render(self.guessed_word, True, "black")
         self.guessed_word_rect = self.guessed_word_surface.get_rect(topleft=(40, 750))
-
-        self.number_on_clock = 5
-        self.timer_surface = self.player_font.render(f"{self.number_on_clock}", True, "black")
-        self.timer_rect = self.timer_surface.get_rect(topright=(1550, 0))
 
         self.buttons = []
         self.load_buttons()
@@ -126,10 +182,6 @@ class Game:
         for button in self.buttons:
             button.draw()
 
-        if self.difficulty == 1:
-            self.number_on_clock = 5 - (pygame.time.get_ticks() // 1000 % 5)
-            self.timer_surface = self.player_font.render(f"{self.number_on_clock}", True, "black")
-            self.screen.blit(self.timer_surface, self.timer_rect)
         pygame.display.update()
 
     def load_buttons(self) -> None:
@@ -168,7 +220,7 @@ class Game:
         elif self.current_player == 1:
             self.current_player = 0
 
-    def pick_category_and_word(self) -> Category:
-        category: Category = self.session.query(Category).order_by(func.random()).first()
+    def pick_category_and_word(self) -> tuple[Type[Category] | None, Type[Word] | None]:
+        category = self.session.query(Category).order_by(func.random()).first()
         word = self.session.query(Word).filter_by(category_id=category.id).order_by(func.random()).first()
         return category, word
