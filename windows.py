@@ -305,6 +305,5 @@ class OptionsWindow(tk.Tk):
     def select(self, index):
         self.master.difficulty = index
 
-
-elo = StartWindow()
-elo.mainloop()
+# elo = StartWindow()
+# elo.mainloop()
