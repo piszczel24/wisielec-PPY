@@ -52,6 +52,8 @@ class StartWindow(tk.Tk):
 
         self.logged_players: list[Player] = []
 
+        self.difficulty = 0
+
         game_title = tk.Label(self, text="WISIELEC", font=("Comic sans MS", 50), pady=30, bg=BG_COLOR)
         game_title.pack()
 
@@ -71,7 +73,7 @@ class StartWindow(tk.Tk):
                                  bg=BUTTON_COLOR, activebackground=BUTTON_COLOR)
         stats_button.pack(side=tk.LEFT, padx=10)
 
-        options_button = tk.Button(self, text="OPCJE", font=BUTTON_FONT, command=self.show_stats, width=12,
+        options_button = tk.Button(self, text="OPCJE", font=BUTTON_FONT, command=self.show_options, width=12,
                                    height=1, bg=BUTTON_COLOR, activebackground=BUTTON_COLOR)
         options_button.pack(side=tk.LEFT, padx=10)
 
@@ -84,6 +86,7 @@ class StartWindow(tk.Tk):
         if len(self.logged_players) >= 2:
             self.withdraw()
             game = Game(self.session.merge(self.logged_players[0]), self.session.merge(self.logged_players[1]))
+            game.difficulty = self.difficulty
             game.run()
             self.deiconify()
         else:
@@ -103,7 +106,9 @@ class StartWindow(tk.Tk):
         pass
 
     def show_options(self) -> None:
-        pass
+        self.withdraw()
+        OptionsWindow(self)
+        self.deiconify()
 
     def exit_app(self) -> None:
         self.destroy()
@@ -218,6 +223,44 @@ class StatsWindow(tk.Tk):
 
         title_label = tk.Label(self, text="Statystyki graczy", font=("Comic sans MS", 20), pady=30, bg=BG_COLOR)
         title_label.pack()
+
+
+class OptionsWindow(tk.Tk):
+    def __init__(self, master: StartWindow) -> None:
+        super().__init__()
+        self.title("Opcje")
+
+        self.master = master
+
+        window_width = 600
+        window_height = 500
+        x = (SCREEN_WIDTH - window_width) // 2
+        y = (SCREEN_HEIGHT - window_height) // 2
+
+        self.geometry(f"{window_width}x{window_height}+{x}+{y}")
+        self.resizable(False, False)
+        self.config(bg=BG_COLOR)
+
+        title_label = tk.Label(self, text="OPCJE", font=("Comic sans MS", 50), pady=30, bg=BG_COLOR)
+        title_label.pack()
+
+        self.elements = ["Tryb klasyczny", "Tryp hardcore"]
+        selected = tk.IntVar()
+
+        self.difficulty = 0  # 0-klasyczny 1-hardcore
+
+        for i, element in enumerate(self.elements):
+            radiobutton = tk.Radiobutton(self, text=element, variable=selected, value=i,
+                                         command=lambda i=i: self.select(i), bg=BG_COLOR, activebackground=BG_COLOR,
+                                         font=FORM_BUTTON_FONT)
+            radiobutton.pack()
+
+        confirm_button = tk.Button(self, text="POTWIERDŹ", font=BUTTON_FONT, command=self.destroy, width=12, height=1,
+                                   bg=BUTTON_COLOR, activebackground=BUTTON_COLOR)
+        confirm_button.pack(pady=50)
+
+    def select(self, index):
+        self.master.difficulty = index
 
 
 elo = StartWindow()

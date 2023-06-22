@@ -42,6 +42,7 @@ class Game:
         pygame.display.set_icon(pygame.image.load("img/icon.png"))
 
         # Zeminne dot. bierzącej gry
+        self.difficulty = 0  # 0-klasyczny 1-hardcore
         self.current_step = 0
         self.players = [player1, player2]
         self.current_player = 0
@@ -75,6 +76,7 @@ class Game:
         self.load_buttons()
 
     def run(self) -> None:
+        print(f"Poziom trudności: {self.difficulty}")
         while self.is_running:
             self.check_input()
             self.draw_content()
