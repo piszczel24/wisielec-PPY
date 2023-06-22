@@ -19,8 +19,8 @@ Session = sessionmaker(bind=engine)
 
 def find_indexes(letter: str, text: str) -> list[int]:
     indexes = []
-    for i in range(len(text)):
-        if text[i] == letter:
+    for i, char in enumerate(text):
+        if char == letter:
             indexes.append(i)
     return indexes
 
