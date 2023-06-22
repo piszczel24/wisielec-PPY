@@ -1,3 +1,15 @@
+"""Moduł zawiera klasy ze wszystkimi rodzajami okien w aplikacji.
+
+Attributes:
+    WIDTH (int): Szerokość okna gry.
+    HEIGHT (int): Wysokość okna gry.
+    BG_COLOR (str): Kolor tła w formacie heksadecymanym.
+    BG_CBUTTON_COLOR OLOR (str): Kolor tła w formacie heksadecymanym.
+    Base: Klasa będąca reprezentacją bazy deklaratywnej.
+    engine (sqlalchemy.engine.Engine): Silnik bazy danych, łączący się z nią przez connection stringa.
+    Session: Klasa reprezentująca sesję połączenia z bazą danych.
+
+"""
 import csv
 import tkinter as tk
 import tkinter.messagebox as messagebox
@@ -9,8 +21,8 @@ import db_initialize
 from db_initialize import Player
 from game import Game
 
-SCREEN_WIDTH = 1960
-SCREEN_HEIGHT = 1080
+WIDTH = 1960
+HEIGHT = 1080
 BG_COLOR = "#13a18b"
 BUTTON_COLOR = "#64a18b"
 BUTTON_FONT = ("Comic sans MS", 10)
@@ -23,10 +35,29 @@ Session = sessionmaker(bind=engine)
 
 
 def hash_password(password: str) -> str:
+    """Funkcja hashuje hasło.
+
+    Args:
+        password: Hasło do shashowania.
+
+    Returns:
+        Shashowane hasło.
+
+    """
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
 
 def verify_password(password: str, hashed_password: str) -> bool:
+    """Sprawdza czy zwykłe hasło zgadza się z tym shashowanym.
+
+    Args:
+        password: Zwykłe hasło.
+        hashed_password: Shashowane hasło.
+
+    Returns:
+        Prawda, jeżeli hasła się zgadzają. Fałsz w przeciwnym przypadku
+
+    """
     return bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8'))
 
 
@@ -34,6 +65,14 @@ Base.metadata.create_all(bind=engine)
 
 
 class StartWindow(tk.Tk):
+    """Klasa reprezentuje ekran startowy aplikacji - memu główne.
+
+    Attributes:
+        session (sqlalchemy.orm.Session): Sesja połączenia do bazy danych.
+        logged_players (list[Player]): Lista zalogowanych graczy.
+        difficulty (int): Poziom trudności: 0 - klasyczny, 1 - hradcore.
+
+    """
 
     def __init__(self) -> None:
         super().__init__()
@@ -43,14 +82,14 @@ class StartWindow(tk.Tk):
         db_initialize.db_initialize()
         window_width = 800
         window_height = 400
-        x = (SCREEN_WIDTH - window_width) // 2
-        y = (SCREEN_HEIGHT - window_height) // 2
+        x = (WIDTH - window_width) // 2
+        y = (HEIGHT - window_height) // 2
 
         self.geometry(f"{window_width}x{window_height}+{x}+{y}")
         self.resizable(False, False)
         self.config(bg=BG_COLOR)
 
-        self.logged_players: list[Player] = []
+        self.logged_players = []
 
         self.difficulty = 0
 
@@ -83,6 +122,7 @@ class StartWindow(tk.Tk):
         exit_app_button.pack(side=tk.LEFT, padx=10)
 
     def start_game(self) -> None:
+        """Odpala grę."""
         if len(self.logged_players) >= 2:
             self.withdraw()
             game = Game(self.session.merge(self.logged_players[0]), self.session.merge(self.logged_players[1]))
@@ -93,39 +133,46 @@ class StartWindow(tk.Tk):
             messagebox.showinfo("Błąd", "Za mało zalogowanych graczy!")
 
     def login_player(self) -> None:
+        """Wyświetla ekran logowania."""
         self.withdraw()
         LoginWindow(self)
         self.deiconify()
 
     def register_player(self) -> None:
+        """Wyświetla ekran rejestracji."""
         self.withdraw()
         RegisterWindow()
         self.deiconify()
 
     def show_stats(self) -> None:
+        """Wyświetla ekran statystyk."""
         self.withdraw()
         StatsWindow()
         self.deiconify()
 
     def show_options(self) -> None:
+        """Wyświetla ekran opcji."""
         self.withdraw()
         OptionsWindow(self)
         self.deiconify()
 
     def exit_app(self) -> None:
+        """Zamyka aplikację."""
         self.destroy()
         self.quit()
 
 
 class RegisterWindow(tk.Tk):
+    """Klasa reprezentuje ekran rejestracji graczy."""
+
     def __init__(self) -> None:
         super().__init__()
         self.title("Rejestracja")
 
         window_width = 600
         window_height = 700
-        x = (SCREEN_WIDTH - window_width) // 2
-        y = (SCREEN_HEIGHT - window_height) // 2
+        x = (WIDTH - window_width) // 2
+        y = (HEIGHT - window_height) // 2
 
         self.geometry(f"{window_width}x{window_height}+{x}+{y}")
         self.resizable(False, False)
@@ -152,6 +199,12 @@ class RegisterWindow(tk.Tk):
         confirm_button.place(x=250, y=500)
 
     def add_to_db(self, nickname: str, password: str) -> None:
+        """Dodaje gracza do bazy danych.
+
+        Args:
+            nickname: Pseudonim gracza.
+            password: Hasło gracza.
+        """
         session = Session()
         max_id = session.query(func.max(Player.id_player)).scalar()
         max_id = max_id or 0
@@ -163,14 +216,20 @@ class RegisterWindow(tk.Tk):
 
 
 class LoginWindow(tk.Tk):
+    """Klasa reprezentuje ekran logowania graczy.
+
+    Args:
+        master: Nadrzędne okno główne.
+    """
+
     def __init__(self, master: StartWindow) -> None:
         super().__init__()
         self.title("Rejestracja")
 
         window_width = 600
         window_height = 700
-        x = (SCREEN_WIDTH - window_width) // 2
-        y = (SCREEN_HEIGHT - window_height) // 2
+        x = (WIDTH - window_width) // 2
+        y = (HEIGHT - window_height) // 2
 
         self.geometry(f"{window_width}x{window_height}+{x}+{y}")
         self.resizable(False, False)
@@ -197,6 +256,13 @@ class LoginWindow(tk.Tk):
         confirm_button.place(x=250, y=500)
 
     def check_in_db(self, nickname: str, password: str, master: StartWindow) -> None:
+        """Sprawdza czy gracz o podanych danych znajduje się w bazie.
+
+        Args:
+            nickname: Pseudonim gracza.
+            password: Hasło gracza.
+            master: Nadrzędne okno główne.
+        """
         session = Session()
         player = session.query(Player).filter_by(nickname=nickname).first()
         if player and verify_password(password, player.password):
@@ -210,14 +276,16 @@ class LoginWindow(tk.Tk):
 
 
 class StatsWindow(tk.Tk):
+    """Klasa reprezentuje ekran statystyk graczy."""
+
     def __init__(self) -> None:
         super().__init__()
         self.title("Rejestracja")
 
         window_width = 600
         window_height = 700
-        x = (SCREEN_WIDTH - window_width) // 2
-        y = (SCREEN_HEIGHT - window_height) // 2
+        x = (WIDTH - window_width) // 2
+        y = (HEIGHT - window_height) // 2
 
         self.geometry(f"{window_width}x{window_height}+{x}+{y}")
         self.resizable(False, False)
@@ -257,6 +325,7 @@ class StatsWindow(tk.Tk):
         go_back_button.place(x=350, y=600)
 
     def export(self) -> None:
+        """Eksportuje dane graczy do pliku .csv."""
         file_path = filedialog.asksaveasfilename(defaultextension=".csv", filetypes=[("CSV Files", "*.csv")])
         if not file_path:
             return
@@ -269,6 +338,18 @@ class StatsWindow(tk.Tk):
 
 
 class OptionsWindow(tk.Tk):
+    """Klasa reprezentuje ekran opcji.
+
+    Args:
+        master: Nadrzędne okno główne.
+
+    Attributes:
+        master (StartWindow): Nadrzędne okno główne.
+        elements (list[str]): Lista mozliwych wyborów gracza.
+        difficulty (int): Poziom trudności: 0 - klasyczny, 1 - hradcore.
+
+    """
+
     def __init__(self, master: StartWindow) -> None:
         super().__init__()
         self.title("Opcje")
@@ -277,8 +358,8 @@ class OptionsWindow(tk.Tk):
 
         window_width = 600
         window_height = 500
-        x = (SCREEN_WIDTH - window_width) // 2
-        y = (SCREEN_HEIGHT - window_height) // 2
+        x = (WIDTH - window_width) // 2
+        y = (HEIGHT - window_height) // 2
 
         self.geometry(f"{window_width}x{window_height}+{x}+{y}")
         self.resizable(False, False)
@@ -290,11 +371,12 @@ class OptionsWindow(tk.Tk):
         self.elements = ["Tryb klasyczny", "Tryp hardcore"]
         selected = tk.IntVar()
 
-        self.difficulty = 0  # 0-klasyczny 1-hardcore
+        self.difficulty = 0
 
         for i, element in enumerate(self.elements):
             radiobutton = tk.Radiobutton(self, text=element, variable=selected, value=i,
-                                         command=lambda i=i: self.select(i), bg=BG_COLOR, activebackground=BG_COLOR,
+                                         command=lambda i=i: self.select_option(i), bg=BG_COLOR,
+                                         activebackground=BG_COLOR,
                                          font=FORM_BUTTON_FONT)
             radiobutton.pack()
 
@@ -302,5 +384,11 @@ class OptionsWindow(tk.Tk):
                                    bg=BUTTON_COLOR, activebackground=BUTTON_COLOR)
         confirm_button.pack(pady=50)
 
-    def select(self, index: int) -> None:
+    def select_option(self, index: int) -> None:
+        """Przekazuje nadrzędnemu oknu poziom trudności wybrany przez gracza.
+
+        Args:
+            index: Indeks opcji.
+
+        """
         self.master.difficulty = index
