@@ -11,7 +11,7 @@ from sqlalchemy import create_engine, Integer, String, Column
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 Base = declarative_base()
-engine = create_engine("postgresql://pycharm:pycharm@localhost:5432/postgres", echo=True)
+engine = create_engine("sqlite:///database.db", echo=True)
 
 
 class Player(Base):
